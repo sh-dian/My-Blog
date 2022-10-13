@@ -3,83 +3,32 @@
 namespace App\Http\Controllers\api;
 
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use App\Http\Requests\LoginRequest;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\UserResource;
+use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
-    {
-        //
+    public function login(LoginRequest $request ){
+
+        $validated = $request->validated();
+
+        if (Auth::attempt($validated, true)) {
+            $user = Auth::user();
+            $user->access_token =  $user->createToken('authToken')->plainTextToken;
+            return $this->return_api(true, Response::HTTP_OK, null, new UserResource($user), null);
+        } else {
+            return $this->return_api(false, Response::HTTP_UNAUTHORIZED, trans("auth.failed"), null, null);
+        }
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
+    public function logout()
     {
-        //
-    }
+        // Revoke all tokens...
+        $user = Auth::user()->tokens()->delete();
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        //
+        return $this->return_api(true, Response::HTTP_OK, null, null, null);
     }
 }
